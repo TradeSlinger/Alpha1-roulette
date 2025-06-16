@@ -25,6 +25,7 @@ class RouletteGame {
     init() {
         this.setupEventListeners();
         this.setupBettingAreas();
+        this.buildDetailedGrid();
         this.updateUI();
         this.updateGameStatus();
     }
@@ -83,6 +84,251 @@ class RouletteGame {
             });
         });
         
+    }
+
+
+    buildDetailedGrid() {
+        const gridContainer = document.querySelector('.image-based-grid');
+        if (!gridContainer) return;
+
+        // Clear existing content
+        gridContainer.innerHTML = '';
+
+        // European roulette number layout
+        const layout = [
+            [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],  // Top row
+            [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],  // Middle row  
+            [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]   // Bottom row
+        ];
+
+        // Build grid where each number is a 3x3 mini-grid
+        this.createGridOfGrids(gridContainer, layout);
+    }
+
+    createGridOfGrids(container, layout) {
+        // Total grid: 42 columns x 9 rows
+        // Columns 1-3: Zero area
+        // Columns 4-39: Numbers (12 numbers * 3 columns each)
+        // Columns 40-42: Column bets
+        
+        // First, create the zero cell (spans multiple rows/cols)
+        this.createZeroCell(container);
+        
+        // Then create column bet cells
+        this.createColumnBets(container, layout);
+        
+        // Finally create all number cells
+        for (let row = 1; row <= 9; row++) {
+            for (let col = 4; col <= 39; col++) {
+                this.createDetailedGridCell(container, row, col, layout);
+            }
+        }
+    }
+
+    createZeroCell(container) {
+        // Create main zero cell
+        const zeroCell = document.createElement('div');
+        zeroCell.className = 'grid-cell number-cell zero-bet';
+        zeroCell.textContent = '0';
+        zeroCell.style.gridRow = '1 / 10';
+        zeroCell.style.gridColumn = '1 / 4';
+        zeroCell.style.background = '#27ae60';
+        zeroCell.style.color = 'white';
+        zeroCell.style.fontSize = '24px';
+        this.addBetAttributes(zeroCell, 'straight', [0]);
+        container.appendChild(zeroCell);
+        
+        // Create zero split cells
+        const splits = [
+            { row: 2, col: 3, numbers: [0, 3] },
+            { row: 5, col: 3, numbers: [0, 2] },
+            { row: 8, col: 3, numbers: [0, 1] }
+        ];
+        
+        splits.forEach(split => {
+            const splitCell = document.createElement('div');
+            splitCell.className = 'grid-cell split-cell zero-split';
+            splitCell.style.gridRow = split.row;
+            splitCell.style.gridColumn = split.col;
+            this.addBetAttributes(splitCell, 'split', split.numbers);
+            container.appendChild(splitCell);
+        });
+    }
+    
+    createColumnBets(container, layout) {
+        // Create three column bet cells
+        const columns = [
+            { row: '1 / 4', numbers: layout[0] },
+            { row: '4 / 7', numbers: layout[1] },
+            { row: '7 / 10', numbers: layout[2] }
+        ];
+        
+        columns.forEach((column, index) => {
+            const colCell = document.createElement('div');
+            colCell.className = 'grid-cell column-bet';
+            colCell.textContent = '2:1';
+            colCell.style.gridRow = column.row;
+            colCell.style.gridColumn = '40 / 43';
+            colCell.style.background = '#9b59b6';
+            colCell.style.color = 'white';
+            this.addBetAttributes(colCell, 'column', column.numbers);
+            container.appendChild(colCell);
+        });
+    }
+
+    createDetailedGridCell(container, row, col, layout) {
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        cell.style.gridRow = row;
+        cell.style.gridColumn = col;
+
+        // Numbers area (columns 4-39)
+        if (col < 4 || col > 39) return;
+
+        // Main number grid (columns 4-39)
+        if (col >= 4 && col <= 39) {
+            const adjustedCol = col - 4; // 0-35
+            const numberIndex = Math.floor(adjustedCol / 3); // Which number (0-11)
+            const subCol = adjustedCol % 3; // Position within 3x3 (0-2)
+            
+            // Determine which row of numbers we're in
+            let numberRow = -1;
+            let subRow = -1;
+            
+            if (row >= 1 && row <= 3) {
+                numberRow = 0; // Top row of numbers
+                subRow = row - 1;
+            } else if (row >= 4 && row <= 6) {
+                numberRow = 1; // Middle row of numbers
+                subRow = row - 4;
+            } else if (row >= 7 && row <= 9) {
+                numberRow = 2; // Bottom row of numbers
+                subRow = row - 7;
+            }
+
+            if (numberRow >= 0 && numberIndex < 12) {
+                const number = layout[numberRow][numberIndex];
+                
+                // Center cell (1,1) is the number
+                if (subRow === 1 && subCol === 1) {
+                    cell.textContent = number;
+                    cell.className += ' number-cell';
+                    const isRed = this.redNumbers.includes(number);
+                    cell.style.background = isRed ? '#e74c3c' : '#34495e';
+                    cell.style.color = 'white';
+                    cell.style.fontSize = '16px';
+                    this.addBetAttributes(cell, 'straight', [number]);
+                }
+                // Top cell (0,1) - split with number above
+                else if (subRow === 0 && subCol === 1) {
+                    if (numberRow > 0) {
+                        const numAbove = layout[numberRow - 1][numberIndex];
+                        cell.className += ' split-cell horizontal-split';
+                        this.addBetAttributes(cell, 'split', [number, numAbove]);
+                    } else {
+                        // Top edge - this would be a street bet
+                        cell.className += ' street-cell';
+                        this.addBetAttributes(cell, 'street', [layout[0][numberIndex], layout[1][numberIndex], layout[2][numberIndex]]);
+                    }
+                }
+                // Bottom cell (2,1) - split with number below
+                else if (subRow === 2 && subCol === 1) {
+                    if (numberRow < 2) {
+                        const numBelow = layout[numberRow + 1][numberIndex];
+                        cell.className += ' split-cell horizontal-split';
+                        this.addBetAttributes(cell, 'split', [number, numBelow]);
+                    }
+                }
+                // Left cell (1,0) - split with number to left
+                else if (subRow === 1 && subCol === 0) {
+                    if (numberIndex > 0) {
+                        const numLeft = layout[numberRow][numberIndex - 1];
+                        cell.className += ' split-cell vertical-split';
+                        this.addBetAttributes(cell, 'split', [numLeft, number]);
+                    } else {
+                        // Left edge - street bet
+                        cell.className += ' street-cell';
+                        this.addBetAttributes(cell, 'street', [layout[0][0], layout[1][0], layout[2][0]]);
+                    }
+                }
+                // Right cell (1,2) - split with number to right
+                else if (subRow === 1 && subCol === 2) {
+                    if (numberIndex < 11) {
+                        const numRight = layout[numberRow][numberIndex + 1];
+                        cell.className += ' split-cell vertical-split';
+                        this.addBetAttributes(cell, 'split', [number, numRight]);
+                    }
+                }
+                // Corner cells
+                else if ((subRow === 0 || subRow === 2) && (subCol === 0 || subCol === 2)) {
+                    // Determine which 4 numbers this corner touches
+                    const cornerNumbers = [];
+                    
+                    // Current number
+                    cornerNumbers.push(number);
+                    
+                    // Adjacent numbers based on corner position
+                    if (subRow === 0 && subCol === 0 && numberRow > 0 && numberIndex > 0) {
+                        // Top-left corner
+                        cornerNumbers.push(layout[numberRow - 1][numberIndex]);
+                        cornerNumbers.push(layout[numberRow][numberIndex - 1]);
+                        cornerNumbers.push(layout[numberRow - 1][numberIndex - 1]);
+                    } else if (subRow === 0 && subCol === 2 && numberRow > 0 && numberIndex < 11) {
+                        // Top-right corner
+                        cornerNumbers.push(layout[numberRow - 1][numberIndex]);
+                        cornerNumbers.push(layout[numberRow][numberIndex + 1]);
+                        cornerNumbers.push(layout[numberRow - 1][numberIndex + 1]);
+                    } else if (subRow === 2 && subCol === 0 && numberRow < 2 && numberIndex > 0) {
+                        // Bottom-left corner
+                        cornerNumbers.push(layout[numberRow + 1][numberIndex]);
+                        cornerNumbers.push(layout[numberRow][numberIndex - 1]);
+                        cornerNumbers.push(layout[numberRow + 1][numberIndex - 1]);
+                    } else if (subRow === 2 && subCol === 2 && numberRow < 2 && numberIndex < 11) {
+                        // Bottom-right corner
+                        cornerNumbers.push(layout[numberRow + 1][numberIndex]);
+                        cornerNumbers.push(layout[numberRow][numberIndex + 1]);
+                        cornerNumbers.push(layout[numberRow + 1][numberIndex + 1]);
+                    }
+                    
+                    if (cornerNumbers.length === 4) {
+                        cell.className += ' corner-cell';
+                        this.addBetAttributes(cell, 'corner', cornerNumbers.sort((a, b) => a - b));
+                    }
+                }
+            }
+        }
+
+        container.appendChild(cell);
+    }
+
+
+
+    addBetAttributes(cell, betType, numbers) {
+        cell.setAttribute('data-bet-type', betType);
+        cell.setAttribute('data-numbers', numbers.join(','));
+        
+        const payouts = {
+            'straight': '35:1',
+            'split': '17:1', 
+            'corner': '8:1',
+            'street': '11:1',
+            'column': '2:1'
+        };
+        
+        cell.title = `${betType} (${payouts[betType]}): ${numbers.join('/')}`;
+
+        // Add click handlers
+        cell.addEventListener('click', () => {
+            this.placeBet(cell, betType, numbers);
+        });
+
+        cell.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            const betId = `${betType}-${numbers.join(',')}`;
+            this.removeBet(betId, cell);
+            this.updateUI();
+            this.updateGameStatus();
+        });
     }
     
     
@@ -359,14 +605,14 @@ class RouletteGame {
             'street': 12,      // 11:1 + original bet (3 numbers)
             'corner': 9,       // 8:1 + original bet (4 numbers)
             'line': 6,         // 5:1 + original bet (6 numbers)
-            'red': 2,         // 1:1 + original bet
-            'black': 2,       // 1:1 + original bet
-            'even': 2,        // 1:1 + original bet
-            'odd': 2,         // 1:1 + original bet
-            'low': 2,         // 1:1 + original bet
-            'high': 2,        // 1:1 + original bet
-            'dozen': 3,       // 2:1 + original bet
-            'column': 3       // 2:1 + original bet
+            'red': 2,          // 1:1 + original bet
+            'black': 2,        // 1:1 + original bet
+            'even': 2,         // 1:1 + original bet
+            'odd': 2,          // 1:1 + original bet
+            'low': 2,          // 1:1 + original bet
+            'high': 2,         // 1:1 + original bet
+            'dozen': 3,        // 2:1 + original bet
+            'column': 3        // 2:1 + original bet
         };
         
         const rate = payoutRates[bet.type] || 2;

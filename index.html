@@ -347,219 +347,116 @@
             flex-direction: column;
         }
 
-        .european-layout {
-            display: grid;
-            grid-template-columns: 50px 1fr 50px;
-            grid-template-rows: auto;
-            gap: 2px;
-            margin-bottom: 8px;
-            align-items: stretch;
-        }
 
-        .zero-column {
-            display: flex;
-            align-items: stretch;
-        }
-
-        .zero-bet-vertical {
-            width: 100%;
-            height: 94px;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        /* Simple Grid - Back to Basics */
+        /* Grid of Grids System - Each number is 3x3 cells */
         .image-based-grid {
             display: grid;
-            grid-template-columns: 60px repeat(12, 1fr) 60px;
-            grid-template-rows: repeat(3, 45px);
-            gap: 2px;
+            /* 42 columns total: 3 for zero + 36 for numbers + 3 for column bets */
+            grid-template-columns: repeat(42, 20px);
+            /* 9 rows total: 3 rows of numbers * 3 cells each */
+            grid-template-rows: repeat(9, 20px);
+            gap: 0;
             background: #ffffff;
-            border: 2px solid #cccccc;
-            width: 100%;
+            border: 2px solid #666;
+            width: fit-content;
             margin: 0 auto;
-            padding: 4px;
-            flex-shrink: 0;
+            padding: 0;
         }
 
-        /* Number betting areas */
-        .bet-area {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            color: white;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            min-height: 40px;
-        }
-
-        .bet-area:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-        }
-
-        .bet-area.selected {
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        /* Split betting hit areas */
-        .split-bet {
-            background: transparent;
-            cursor: pointer;
-            z-index: 10;
-            transition: all 0.2s ease;
-            border: 1px solid transparent;
-        }
-
-        .split-bet:hover {
-            background: rgba(52, 152, 219, 0.4);
-            border: 1px solid rgba(52, 152, 219, 0.8);
-        }
-
-        .split-bet.selected {
-            background: rgba(52, 152, 219, 0.6);
-            border: 1px solid rgba(52, 152, 219, 1);
-        }
-
-        /* Vertical splits (between adjacent numbers in same row) */
-        .vertical {
-            background: rgba(52, 152, 219, 0.2);
-        }
-
-        .vertical:hover {
-            background: rgba(52, 152, 219, 0.5);
-        }
-
-        /* Horizontal splits (between rows) */
-        .horizontal {
-            background: rgba(52, 152, 219, 0.2);
-        }
-
-        .horizontal:hover {
-            background: rgba(52, 152, 219, 0.5);
-        }
-
-        /* Corner bets */
-        .corner-split {
-            border-radius: 50%;
-            background: rgba(155, 89, 182, 0.6) !important;
-            border: 2px solid rgba(155, 89, 182, 1) !important;
-        }
-        
-        .corner-split:hover {
-            background: rgba(155, 89, 182, 0.9) !important;
-            transform: scale(1.1);
-        }
-
-        /* Zero splits (0/1, 0/2, 0/3) */
-        .zero-split {
-            border-radius: 50%;
-            background: rgba(39, 174, 96, 0.6) !important;
-            border: 2px solid rgba(39, 174, 96, 1) !important;
-        }
-
-        .zero-split:hover {
-            background: rgba(39, 174, 96, 0.9) !important;
-            transform: scale(1.1);
-        }
-
-        /* Street bets (3 consecutive numbers) */
-        .street-bet {
-            background: rgba(230, 126, 34, 0.6) !important;
-            border: 2px solid rgba(230, 126, 34, 1) !important;
-        }
-
-        .street-bet:hover {
-            background: rgba(230, 126, 34, 0.9) !important;
-        }
-
-        /* Grid area types */
-        .street-area {
-            background: rgba(230, 126, 34, 0.6);
-            border: 1px solid rgba(230, 126, 34, 1);
+        /* Grid cell types */
+        .grid-cell {
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 10px;
-            font-weight: 600;
+            font-weight: bold;
+            border: 0.5px solid #ccc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Number cells */
+        .number-cell {
+            font-size: 16px;
             color: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            border: 1px solid rgba(0,0,0,0.3);
         }
 
-        .street-area:hover {
-            background: rgba(230, 126, 34, 0.9);
+        .number-cell:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .v-split-area {
-            background: rgba(52, 152, 219, 0.4);
+        /* Empty cells */
+        .empty-cell {
+            background: transparent !important;
+            border: none !important;
+            cursor: default !important;
+        }
+
+        /* Split bet cells (thin white strips) */
+        .split-cell {
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+        }
+
+        .split-cell:hover {
+            background: rgba(52, 152, 219, 0.3);
             border: 1px solid rgba(52, 152, 219, 0.8);
-            cursor: pointer;
-            transition: all 0.2s ease;
         }
 
-        .v-split-area:hover {
-            background: rgba(52, 152, 219, 0.7);
+
+        /* Corner bet cells (small intersections) */
+        .corner-cell {
+            background: #f8f8f8;
+            border: 1px solid #ccc;
         }
 
-        .h-split-area {
-            background: rgba(52, 152, 219, 0.4);
-            border: 1px solid rgba(52, 152, 219, 0.8);
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .corner-cell:hover {
+            background: rgba(155, 89, 182, 0.5);
+            border: 1px solid rgba(155, 89, 182, 0.8);
+            z-index: 10;
         }
 
-        .h-split-area:hover {
-            background: rgba(52, 152, 219, 0.7);
+        /* Street bet cells (left edge) */
+        .street-cell {
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+            font-size: 10px;
         }
 
-        .corner-area {
-            background: rgba(155, 89, 182, 0.6);
-            border: 1px solid rgba(155, 89, 182, 1);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 50%;
+        .street-cell:hover {
+            background: rgba(230, 126, 34, 0.5);
+            border: 1px solid rgba(230, 126, 34, 0.8);
+        }
+        
+        /* Zero split cells */
+        .zero-split {
+            background: rgba(39, 174, 96, 0.3);
+            border: 1px solid rgba(39, 174, 96, 0.6);
         }
 
-        .corner-area:hover {
-            background: rgba(155, 89, 182, 0.9);
-            transform: scale(1.1);
-        }
-
-        .zero-split-area {
+        .zero-split:hover {
             background: rgba(39, 174, 96, 0.6);
             border: 1px solid rgba(39, 174, 96, 1);
-            cursor: pointer;
-            transition: all 0.2s ease;
-            border-radius: 50%;
         }
 
-        .zero-split-area:hover {
-            background: rgba(39, 174, 96, 0.9);
-            transform: scale(1.1);
+        /* Zero cell styling */
+        .zero-bet {
+            font-size: 24px !important;
+            font-weight: bold;
         }
 
-        .empty-grid {
-            background: transparent;
-        }
 
-        /* Street bets */
-        .street-split {
-            width: 30px;
-            height: calc(100% + 4px);
-            top: -2px;
-        }
+
+
+
+
+
 
         /* Visual chip display */
         .chip-on-table {
@@ -764,60 +661,6 @@
             text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
         }
 
-        /* Color-coded bet types from image legend */
-        
-        /* White - Split bets (17:1) */
-        .split-bet.white {
-            background: #ffffff;
-            border: 1px solid #cccccc;
-            color: #333;
-        }
-        
-        /* Purple - Street/3 Line bets (11:1) */
-        .street-bet.purple {
-            background: #9c27b0;
-            border: 1px solid #7b1fa2;
-            color: white;
-        }
-        
-        /* Blue - Corner bets (8:1) */
-        .corner-bet.blue {
-            background: #2196f3;
-            border: 1px solid #1976d2;
-            color: white;
-        }
-        
-        /* Green - Six Line bets (5:1) */
-        .line-bet.green {
-            background: #4caf50;
-            border: 1px solid #388e3c;
-            color: white;
-        }
-        
-        /* Purple - Column bets (2:1) */
-        .column-bet.purple {
-            background: #9c27b0;
-            border: 1px solid #7b1fa2;
-            color: white;
-            grid-column: 14;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-            font-size: 12px;
-            font-weight: bold;
-        }
-        
-        /* Zero spans full height */
-        .zero-bet {
-            grid-row: 1 / 4;
-            grid-column: 1;
-        }
-
-        /* Column bets go in the last column */
-        .column-bet {
-            grid-column: 14;
-            writing-mode: vertical-rl;
-            text-orientation: mixed;
-        }
         /* Dozen bets - PDF Orange Color */
         .dozen-bet {
             background: #f39c12;
@@ -1177,55 +1020,9 @@
 
         <div class="roulette-table-area">
             <div class="roulette-table-container">
-                <!-- Start Simple - Just the Basic Numbers Like Google Sheets -->
+                <!-- Grid will be built dynamically by JavaScript -->
                 <div class="image-based-grid">
-                    <!-- Zero spans all 3 rows -->
-                    <div class="bet-area zero-bet" data-bet-type="straight" data-numbers="0" title="Straight (35:1): 0">0</div>
-                    
-                    <!-- Row 1: Numbers 3,6,9,12,15,18,21,24,27,30,33,36 -->
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="3" title="Straight (35:1): 3">3</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="6" title="Straight (35:1): 6">6</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="9" title="Straight (35:1): 9">9</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="12" title="Straight (35:1): 12">12</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="15" title="Straight (35:1): 15">15</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="18" title="Straight (35:1): 18">18</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="21" title="Straight (35:1): 21">21</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="24" title="Straight (35:1): 24">24</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="27" title="Straight (35:1): 27">27</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="30" title="Straight (35:1): 30">30</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="33" title="Straight (35:1): 33">33</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="36" title="Straight (35:1): 36">36</div>
-                    <div class="bet-area column-bet purple" data-bet-type="column" data-numbers="3,6,9,12,15,18,21,24,27,30,33,36" title="Column (2:1)">2 to 1</div>
-                    
-                    <!-- Row 2: Numbers 2,5,8,11,14,17,20,23,26,29,32,35 -->
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="2" title="Straight (35:1): 2">2</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="5" title="Straight (35:1): 5">5</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="8" title="Straight (35:1): 8">8</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="11" title="Straight (35:1): 11">11</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="14" title="Straight (35:1): 14">14</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="17" title="Straight (35:1): 17">17</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="20" title="Straight (35:1): 20">20</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="23" title="Straight (35:1): 23">23</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="26" title="Straight (35:1): 26">26</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="29" title="Straight (35:1): 29">29</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="32" title="Straight (35:1): 32">32</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="35" title="Straight (35:1): 35">35</div>
-                    <div class="bet-area column-bet purple" data-bet-type="column" data-numbers="2,5,8,11,14,17,20,23,26,29,32,35" title="Column (2:1)">2 to 1</div>
-                    
-                    <!-- Row 3: Numbers 1,4,7,10,13,16,19,22,25,28,31,34 -->
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="1" title="Straight (35:1): 1">1</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="4" title="Straight (35:1): 4">4</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="7" title="Straight (35:1): 7">7</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="10" title="Straight (35:1): 10">10</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="13" title="Straight (35:1): 13">13</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="16" title="Straight (35:1): 16">16</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="19" title="Straight (35:1): 19">19</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="22" title="Straight (35:1): 22">22</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="25" title="Straight (35:1): 25">25</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="28" title="Straight (35:1): 28">28</div>
-                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="31" title="Straight (35:1): 31">31</div>
-                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="34" title="Straight (35:1): 34">34</div>
-                    <div class="bet-area column-bet purple" data-bet-type="column" data-numbers="1,4,7,10,13,16,19,22,25,28,31,34" title="Column (2:1)">2 to 1</div>
+                    <!-- Content generated by buildDetailedGrid() -->
                 </div>
                 
                 <!-- Dozen Bets -->
