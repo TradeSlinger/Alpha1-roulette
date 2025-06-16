@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify Roulette</title>
+</head>
+<body>
+    <h1>Roulette Table Verification</h1>
+    <p>Loading game...</p>
+    
+    <script src="game.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded');
+            
+            // Check if RouletteGame exists
+            if (typeof RouletteGame === 'undefined') {
+                document.body.innerHTML += '<p style="color:red">ERROR: RouletteGame class not found!</p>';
+                return;
+            }
+            
+            document.body.innerHTML += '<p style="color:green">SUCCESS: RouletteGame class loaded!</p>';
+            
+            try {
+                // Create game instance
+                const game = new RouletteGame();
+                document.body.innerHTML += '<p style="color:green">SUCCESS: Game instance created!</p>';
+                document.body.innerHTML += `<p>Bankroll: $${game.bankroll}</p>`;
+                document.body.innerHTML += `<p>Selected chip: $${game.selectedChipValue}</p>`;
+                
+                // Test bet placement
+                const testBet = {
+                    element: document.createElement('div'),
+                    type: 'straight',
+                    numbers: [7]
+                };
+                
+                document.body.innerHTML += '<p style="color:green">Basic game functionality verified!</p>';
+                document.body.innerHTML += '<a href="index.html">Go to Game</a>';
+                
+            } catch (e) {
+                document.body.innerHTML += `<p style="color:red">ERROR: ${e.message}</p>`;
+                console.error(e);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Corner Betting</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-grid { 
+            display: grid; 
+            grid-template-columns: repeat(12, 50px); 
+            grid-template-rows: repeat(3, 50px); 
+            gap: 1px; 
+            margin: 20px 0; 
+            position: relative;
+        }
+        .number { 
+            background: #ddd; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold; 
+        }
+        .corner-area {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: purple;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+        }
+        .log { margin: 5px 0; padding: 5px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>Corner Betting Test</h1>
+    <div id="log"></div>
+    <div class="test-grid" id="grid"></div>
+    
+    <script>
+        const layout = [
+            [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
+            [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
+            [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
+        ];
+        
+        function log(msg) {
+            document.getElementById('log').innerHTML += '<div class="log">' + msg + '</div>';
+        }
+        
+        function getNumberAtPosition(col, row) {
+            if (row >= 0 && row < 3 && col >= 0 && col < 12) {
+                return layout[row][col];
+            }
+            return null;
+        }
+        
+        // Create grid
+        const grid = document.getElementById('grid');
+        for (let row = 0; row < 3; row++) {
+            for (let col = 0; col < 12; col++) {
+                const div = document.createElement('div');
+                div.className = 'number';
+                div.textContent = layout[row][col];
+                grid.appendChild(div);
+            }
+        }
+        
+        // Test corner calculations
+        log('Testing corner bet calculations...');
+        
+        const cellWidth = 51; // 50px + 1px gap
+        const cellHeight = 51;
+        
+        for (let row = 0; row < 2; row++) {
+            for (let col = 0; col < 11; col++) {
+                const nums = [
+                    getNumberAtPosition(col, row),
+                    getNumberAtPosition(col + 1, row),
+                    getNumberAtPosition(col, row + 1),
+                    getNumberAtPosition(col + 1, row + 1)
+                ].filter(n => n);
+                
+                if (nums.length === 4) {
+                    const left = (col + 1) * cellWidth - 8;
+                    const top = (row + 1) * cellHeight - 8;
+                    
+                    // Create visual corner area
+                    const cornerArea = document.createElement('div');
+                    cornerArea.className = 'corner-area';
+                    cornerArea.style.left = left + 'px';
+                    cornerArea.style.top = top + 'px';
+                    cornerArea.title = `Corner: ${nums.join('/')}`;
+                    cornerArea.onclick = () => {
+                        log(`Corner bet clicked: ${nums.join('/')} at position (${left}, ${top})`);
+                    };
+                    
+                    grid.appendChild(cornerArea);
+                    
+                    log(`Corner ${nums.join('/')} at col=${col}, row=${row}, pos=(${left}, ${top})`);
+                }
+            }
+        }
+        
+        log('Corner betting test setup complete!');
+    </script>
+</body>
+</html>

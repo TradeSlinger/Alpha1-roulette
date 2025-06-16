@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Roulette Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .bankroll {
+            text-align: center;
+            font-size: 24px;
+            margin: 20px 0;
+            color: #2ecc71;
+        }
+        
+        .chip-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .chip {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            border: 3px solid rgba(255,255,255,0.5);
+            transition: all 0.2s;
+        }
+        
+        .chip:hover {
+            transform: scale(1.1);
+        }
+        
+        .chip.selected {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .chip[data-value="1"] { background: #ddd; color: #333; }
+        .chip[data-value="5"] { background: #e74c3c; }
+        .chip[data-value="10"] { background: #3498db; }
+        .chip[data-value="25"] { background: #27ae60; }
+        .chip[data-value="50"] { background: #f39c12; }
+        .chip[data-value="100"] { background: #8e44ad; }
+        
+        .roulette-table {
+            background: #2d5016;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(3, 60px);
+            gap: 2px;
+            margin: 0 auto;
+            max-width: 800px;
+        }
+        
+        .number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .number:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        .number.red { background: #e74c3c; }
+        .number.black { background: #2c3e50; }
+        .number.green { background: #27ae60; }
+        
+        .chip-on-number {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #f39c12;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            border: 2px solid white;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background: #3498db;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        
+        button:hover {
+            background: #2980b9;
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 10px;
+            background: #ecf0f1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Simple Roulette Table</h1>
+        
+        <div class="bankroll">Bankroll: $<span id="bankroll">1000</span></div>
+        
+        <div class="chip-selector">
+            <div class="chip" data-value="1">$1</div>
+            <div class="chip" data-value="5">$5</div>
+            <div class="chip selected" data-value="10">$10</div>
+            <div class="chip" data-value="25">$25</div>
+            <div class="chip" data-value="50">$50</div>
+            <div class="chip" data-value="100">$100</div>
+        </div>
+        
+        <div class="roulette-table">
+            <div class="numbers-grid" id="numbers-grid">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button onclick="spin()">SPIN</button>
+            <button onclick="clearBets()">CLEAR BETS</button>
+        </div>
+        
+        <div class="status" id="status">Select chips and click numbers to place bets</div>
+    </div>
+    
+    <script>
+        // Game state
+        let bankroll = 1000;
+        let selectedChip = 10;
+        let bets = new Map();
+        
+        // Roulette numbers layout
+        const layout = [
+            [3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36],
+            [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35],
+            [1, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]
+        ];
+        
+        const redNumbers = [1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36];
+        
+        // Initialize table
+        function initTable() {
+            const grid = document.getElementById('numbers-grid');
+            
+            // Add all numbers
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 12; col++) {
+                    const num = layout[row][col];
+                    const div = document.createElement('div');
+                    div.className = 'number ' + (redNumbers.includes(num) ? 'red' : 'black');
+                    div.textContent = num;
+                    div.dataset.number = num;
+                    div.onclick = () => placeBet(num, div);
+                    grid.appendChild(div);
+                }
+            }
+        }
+        
+        // Chip selection
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.onclick = () => {
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+                chip.classList.add('selected');
+                selectedChip = parseInt(chip.dataset.value);
+            };
+        });
+        
+        // Place bet
+        function placeBet(number, element) {
+            if (selectedChip > bankroll) {
+                updateStatus('Insufficient funds!', 'error');
+                return;
+            }
+            
+            const betKey = 'num-' + number;
+            
+            if (bets.has(betKey)) {
+                // Add to existing bet
+                const currentBet = bets.get(betKey);
+                currentBet.amount += selectedChip;
+                currentBet.chip.textContent = '$' + currentBet.amount;
+            } else {
+                // New bet
+                const chip = document.createElement('div');
+                chip.className = 'chip-on-number';
+                chip.textContent = '$' + selectedChip;
+                element.appendChild(chip);
+                
+                bets.set(betKey, {
+                    number: number,
+                    amount: selectedChip,
+                    element: element,
+                    chip: chip
+                });
+            }
+            
+            bankroll -= selectedChip;
+            updateBankroll();
+            updateStatus(`Bet $${selectedChip} on ${number}`);
+        }
+        
+        // Spin
+        function spin() {
+            if (bets.size === 0) {
+                updateStatus('Place bets first!', 'error');
+                return;
+            }
+            
+            const winningNumber = Math.floor(Math.random() * 37);
+            let totalWon = 0;
+            
+            bets.forEach((bet, key) => {
+                if (bet.number === winningNumber) {
+                    const payout = bet.amount * 36;
+                    totalWon += payout;
+                    bankroll += payout;
+                }
+            });
+            
+            updateBankroll();
+            
+            if (totalWon > 0) {
+                updateStatus(`Winner! Number ${winningNumber} - Won $${totalWon}`, 'win');
+            } else {
+                updateStatus(`Number ${winningNumber} - No wins`, 'lose');
+            }
+            
+            setTimeout(clearBets, 3000);
+        }
+        
+        // Clear bets
+        function clearBets() {
+            bets.forEach(bet => {
+                bet.chip.remove();
+            });
+            bets.clear();
+            updateStatus('Bets cleared - place new bets');
+        }
+        
+        // Update displays
+        function updateBankroll() {
+            document.getElementById('bankroll').textContent = bankroll;
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.style.background = type === 'error' ? '#ffcccc' : 
+                                     type === 'win' ? '#ccffcc' : 
+                                     type === 'lose' ? '#ffeecc' : '#ecf0f1';
+        }
+        
+        // Initialize
+        initTable();
+    </script>
+</body>
+</html>

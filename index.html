@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Roulette Game</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf0 50%, #dde3e8 100%);
+            color: #2c3e50;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Futuristic grid overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(52, 73, 94, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(52, 73, 94, 0.08) 1px, transparent 1px);
+            background-size: 20px 20px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .top-bar {
+            width: 100vw;
+            height: 60px;
+            background: linear-gradient(145deg, #2c3e50 0%, #34495e 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            text-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.3),
+                0 0 15px rgba(255, 255, 255, 0.1);
+            margin: 0;
+        }
+
+        .bankroll-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .bankroll-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bankroll-item label {
+            color: #ecf0f1;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+
+        .bankroll-item input {
+            width: 100px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            color: #2c3e50;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .current-bankroll {
+            color: #2ecc71;
+            font-size: 14px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            background: rgba(46, 204, 113, 0.1);
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+
+        /* Chip Selector Styles */
+        .chip-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            margin-top: 6px;
+        }
+
+        .chip {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 3px solid;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .chip::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            right: 10%;
+            bottom: 10%;
+            border: 1px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+        }
+
+        .chip[data-value="1"] {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-color: #bdc3c7;
+            color: #2c3e50;
+        }
+
+        .chip[data-value="5"] {
+            background: linear-gradient(145deg, #e74c3c 0%, #c0392b 100%);
+            border-color: #a93226;
+            color: #ffffff;
+        }
+
+        .chip[data-value="10"] {
+            background: linear-gradient(145deg, #3498db 0%, #2980b9 100%);
+            border-color: #1f5f8b;
+            color: #ffffff;
+        }
+
+        .chip[data-value="25"] {
+            background: linear-gradient(145deg, #27ae60 0%, #1e8449 100%);
+            border-color: #186a3b;
+            color: #ffffff;
+        }
+
+        .chip[data-value="50"] {
+            background: linear-gradient(145deg, #f39c12 0%, #e67e22 100%);
+            border-color: #d35400;
+            color: #ffffff;
+        }
+
+        .chip[data-value="100"] {
+            background: linear-gradient(145deg, #8e44ad 0%, #6c3483 100%);
+            border-color: #5b2c87;
+            color: #ffffff;
+        }
+
+        .chip:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        .chip.selected {
+            transform: translateY(-2px) scale(1.1);
+            box-shadow: 
+                0 0 0 2px #3498db,
+                0 0 12px rgba(52, 152, 219, 0.6),
+                0 4px 12px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        }
+
+        /* Chip Display on Table */
+        .chip-display {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: linear-gradient(145deg, #f1c40f 0%, #f39c12 100%);
+            color: #2c3e50;
+            font-size: 8px;
+            font-weight: 700;
+            padding: 2px 4px;
+            border-radius: 8px;
+            border: 1px solid #e67e22;
+            box-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .bet-area {
+            position: relative;
+        }
+
+        .bet-area.winning {
+            animation: winningPulse 2s ease-in-out infinite;
+            border: 3px solid #f1c40f !important;
+            box-shadow: 
+                0 0 0 2px #f1c40f,
+                0 0 20px rgba(241, 196, 15, 0.8),
+                0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        @keyframes winningPulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 0 2px #f1c40f,
+                    0 0 20px rgba(241, 196, 15, 0.8),
+                    0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 0 4px #f1c40f,
+                    0 0 30px rgba(241, 196, 15, 1),
+                    0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        .main-container {
+            width: 100vw;
+            height: calc(100vh - 60px);
+            display: grid;
+            grid-template-columns: 250px 1fr 280px;
+            grid-template-rows: 1fr 320px;
+            grid-template-areas: 
+                "betting game results"
+                "betting roulette-table results";
+            gap: 2px;
+            padding: 2px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .betting-controls {
+            grid-area: betting;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            padding: 8px;
+            overflow-y: auto;
+            box-shadow: 
+                inset 0 0 20px rgba(52, 73, 94, 0.05),
+                0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+            background: rgba(52, 73, 94, 0.03);
+            border: 1px solid rgba(52, 73, 94, 0.15);
+            border-radius: 4px;
+            padding: 8px;
+            box-shadow: inset 0 1px 2px rgba(52, 73, 94, 0.05);
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 6px 8px;
+            background: #ffffff;
+            border: 1px solid #95a5a6;
+            border-radius: 4px;
+            color: #2c3e50;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            box-shadow: inset 0 1px 2px rgba(52, 73, 94, 0.05);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
+            background: #f8f9fa;
+        }
+
+        select {
+            background-image: none;
+            cursor: pointer;
+        }
+
+        /* Roulette Table Area */
+        .roulette-table-area {
+            grid-area: roulette-table;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            padding: 12px;
+            overflow-y: auto;
+            box-shadow: 
+                inset 0 0 20px rgba(52, 73, 94, 0.05),
+                0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Roulette Table Styles */
+        .roulette-table-container {
+            background: rgba(52, 73, 94, 0.02);
+            border: 1px solid rgba(52, 73, 94, 0.15);
+            border-radius: 6px;
+            padding: 6px;
+            width: 100%;
+            max-width: 100%;
+            overflow: hidden;
+            box-shadow: 
+                inset 0 2px 4px rgba(52, 73, 94, 0.05),
+                0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .european-layout {
+            display: grid;
+            grid-template-columns: 50px 1fr 50px;
+            grid-template-rows: auto;
+            gap: 2px;
+            margin-bottom: 8px;
+            align-items: stretch;
+        }
+
+        .zero-column {
+            display: flex;
+            align-items: stretch;
+        }
+
+        .zero-bet-vertical {
+            width: 100%;
+            height: 94px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        /* Simple Grid - Back to Basics */
+        .image-based-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(23, 1fr) 60px;
+            grid-template-rows: repeat(3, 45px);
+            gap: 2px;
+            background: #ffffff;
+            border: 2px solid #cccccc;
+            width: 100%;
+            margin: 0 auto;
+            padding: 4px;
+            flex-shrink: 0;
+        }
+
+        /* Number betting areas */
+        .bet-area {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 40px;
+        }
+
+        .bet-area:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .bet-area.selected {
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Split betting hit areas */
+        .split-bet {
+            background: transparent;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .split-bet:hover {
+            background: rgba(52, 152, 219, 0.4);
+            border: 1px solid rgba(52, 152, 219, 0.8);
+        }
+
+        .split-bet.selected {
+            background: rgba(52, 152, 219, 0.6);
+            border: 1px solid rgba(52, 152, 219, 1);
+        }
+
+        /* Vertical splits (between adjacent numbers in same row) */
+        .vertical {
+            background: rgba(52, 152, 219, 0.2);
+        }
+
+        .vertical:hover {
+            background: rgba(52, 152, 219, 0.5);
+        }
+
+        /* Horizontal splits (between rows) */
+        .horizontal {
+            background: rgba(52, 152, 219, 0.2);
+        }
+
+        .horizontal:hover {
+            background: rgba(52, 152, 219, 0.5);
+        }
+
+        /* Corner bets */
+        .corner-split {
+            border-radius: 50%;
+            background: rgba(155, 89, 182, 0.6) !important;
+            border: 2px solid rgba(155, 89, 182, 1) !important;
+        }
+        
+        .corner-split:hover {
+            background: rgba(155, 89, 182, 0.9) !important;
+            transform: scale(1.1);
+        }
+
+        /* Zero splits (0/1, 0/2, 0/3) */
+        .zero-split {
+            border-radius: 50%;
+            background: rgba(39, 174, 96, 0.6) !important;
+            border: 2px solid rgba(39, 174, 96, 1) !important;
+        }
+
+        .zero-split:hover {
+            background: rgba(39, 174, 96, 0.9) !important;
+            transform: scale(1.1);
+        }
+
+        /* Street bets (3 consecutive numbers) */
+        .street-bet {
+            background: rgba(230, 126, 34, 0.6) !important;
+            border: 2px solid rgba(230, 126, 34, 1) !important;
+        }
+
+        .street-bet:hover {
+            background: rgba(230, 126, 34, 0.9) !important;
+        }
+
+        /* Grid area types */
+        .street-area {
+            background: rgba(230, 126, 34, 0.6);
+            border: 1px solid rgba(230, 126, 34, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .street-area:hover {
+            background: rgba(230, 126, 34, 0.9);
+        }
+
+        .v-split-area {
+            background: rgba(52, 152, 219, 0.4);
+            border: 1px solid rgba(52, 152, 219, 0.8);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .v-split-area:hover {
+            background: rgba(52, 152, 219, 0.7);
+        }
+
+        .h-split-area {
+            background: rgba(52, 152, 219, 0.4);
+            border: 1px solid rgba(52, 152, 219, 0.8);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .h-split-area:hover {
+            background: rgba(52, 152, 219, 0.7);
+        }
+
+        .corner-area {
+            background: rgba(155, 89, 182, 0.6);
+            border: 1px solid rgba(155, 89, 182, 1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 50%;
+        }
+
+        .corner-area:hover {
+            background: rgba(155, 89, 182, 0.9);
+            transform: scale(1.1);
+        }
+
+        .zero-split-area {
+            background: rgba(39, 174, 96, 0.6);
+            border: 1px solid rgba(39, 174, 96, 1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-radius: 50%;
+        }
+
+        .zero-split-area:hover {
+            background: rgba(39, 174, 96, 0.9);
+            transform: scale(1.1);
+        }
+
+        .empty-grid {
+            background: transparent;
+        }
+
+        /* Street bets */
+        .street-split {
+            width: 30px;
+            height: calc(100% + 4px);
+            top: -2px;
+        }
+
+        /* Visual chip display */
+        .chip-on-table {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            border: 2px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3),
+                inset 0 -1px 2px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            pointer-events: none;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Chip colors */
+        .chip-1 { background: linear-gradient(145deg, #ffffff, #e0e0e0); color: #333; border-color: #999; }
+        .chip-5 { background: linear-gradient(145deg, #ff6b6b, #e74c3c); }
+        .chip-10 { background: linear-gradient(145deg, #4b7bec, #3742fa); }
+        .chip-25 { background: linear-gradient(145deg, #26de81, #20bf6b); }
+        .chip-50 { background: linear-gradient(145deg, #fd9644, #fa8231); }
+        .chip-100 { background: linear-gradient(145deg, #8b6914, #654321); }
+
+        .chip-stack .chip-on-table:nth-child(n+3) {
+            margin-top: -36px;
+            z-index: 12;
+        }
+
+
+        .column-bets-vertical {
+            display: grid;
+            grid-template-rows: repeat(3, 30px);
+            gap: 2px;
+        }
+
+        .column-bet-vertical {
+            height: 30px;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .dozen-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            margin: 2px 0;
+            flex-shrink: 0;
+        }
+
+        .outside-section {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 2px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .bet-area {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 1px 3px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .bet-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, 
+                rgba(255, 255, 255, 0.1) 0%, 
+                rgba(255, 255, 255, 0.05) 50%, 
+                rgba(0, 0, 0, 0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.25s ease;
+            pointer-events: none;
+        }
+
+        .bet-area:hover::before {
+            opacity: 1;
+        }
+
+        .bet-area:hover {
+            transform: translateY(-1px);
+            box-shadow: 
+                0 3px 8px rgba(0, 0, 0, 0.25),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .bet-area:active {
+            transform: translateY(0);
+            transition: transform 0.1s ease;
+        }
+
+        .bet-area.selected {
+            border: 2px solid #3498db;
+            box-shadow: 
+                0 0 0 1px #3498db,
+                0 0 8px rgba(52, 152, 219, 0.5),
+                0 3px 6px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .bet-area.selected::after {
+            content: '';
+            position: absolute;
+            top: 1px;
+            right: 1px;
+            width: 4px;
+            height: 4px;
+            background: #3498db;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 3px rgba(52, 152, 219, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        /* Number bet styling - PDF Color Scheme */
+        .number-bet {
+            width: 100%;
+            height: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            border: 1px solid #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        .number-bet.red {
+            background: #e74c3c;
+            border-color: #c0392b;
+        }
+
+        .number-bet.black {
+            background: #34495e;
+            border-color: #2c3e50;
+        }
+
+        .zero-bet {
+            background: #27ae60;
+            border-color: #229954;
+            width: 100%;
+            height: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+            grid-row: span 3;
+        }
+
+        /* Column bets - PDF Purple Color */
+        .column-bet {
+            background: #9b59b6;
+            border-color: #8e44ad;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        /* Color-coded bet types from image legend */
+        
+        /* White - Split bets (17:1) */
+        .split-bet.white {
+            background: #ffffff;
+            border: 1px solid #cccccc;
+            color: #333;
+        }
+        
+        /* Purple - Street/3 Line bets (11:1) */
+        .street-bet.purple {
+            background: #9c27b0;
+            border: 1px solid #7b1fa2;
+            color: white;
+        }
+        
+        /* Blue - Corner bets (8:1) */
+        .corner-bet.blue {
+            background: #2196f3;
+            border: 1px solid #1976d2;
+            color: white;
+        }
+        
+        /* Green - Six Line bets (5:1) */
+        .line-bet.green {
+            background: #4caf50;
+            border: 1px solid #388e3c;
+            color: white;
+        }
+        
+        /* Purple - Column bets (2:1) */
+        .column-bet.purple {
+            background: #9c27b0;
+            border: 1px solid #7b1fa2;
+            color: white;
+            grid-column: 14;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        /* Zero spans full height */
+        .zero-bet {
+            grid-row: 1 / 4;
+            grid-column: 1;
+        }
+
+        /* Dozen bets - PDF Orange Color */
+        .dozen-bet {
+            background: #f39c12;
+            border: 1px solid #e67e22;
+            color: white;
+            height: 35px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        /* Outside bets - PDF Color Scheme */
+        .outside-bet {
+            background: #f39c12;
+            border: 1px solid #e67e22;
+            color: white;
+            height: 35px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        .outside-bet.red-bet {
+            background: #e74c3c;
+            border-color: #c0392b;
+        }
+
+        .outside-bet.black-bet {
+            background: #34495e;
+            border-color: #2c3e50;
+        }
+
+
+        .bankroll-display {
+            background: linear-gradient(145deg, #ecf0f1 0%, #d5dbdb 100%);
+            border: 1px solid #95a5a6;
+            border-radius: 4px;
+            padding: 12px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #2c3e50;
+            text-shadow: 0 0 10px rgba(52, 73, 94, 0.3);
+            margin: 8px 0;
+            box-shadow: 
+                inset 0 1px 3px rgba(52, 73, 94, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .game-area {
+            grid-area: game;
+            background: #ffffff;
+            border: 1px solid #95a5a6;
+            border-radius: 4px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 
+                inset 0 0 20px rgba(52, 73, 94, 0.05),
+                0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .winning-number {
+            font-size: 36px;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+            padding: 15px;
+            border-radius: 6px;
+            min-width: 80px;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #bdc3c7;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: 
+                0 3px 12px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+
+        .winning-number.red {
+            color: #e74c3c;
+            border-color: #e74c3c;
+            background: linear-gradient(145deg, #ffffff 0%, #fdf2f2 100%);
+            text-shadow: 0 0 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .winning-number.black {
+            color: #2c3e50;
+            border-color: #2c3e50;
+            background: linear-gradient(145deg, #ffffff 0%, #f4f6f7 100%);
+            text-shadow: 0 0 20px rgba(44, 62, 80, 0.3);
+        }
+
+        .winning-number.green {
+            color: #27ae60;
+            border-color: #27ae60;
+            background: linear-gradient(145deg, #ffffff 0%, #f1f8f4 100%);
+            text-shadow: 0 0 20px rgba(39, 174, 96, 0.3);
+        }
+
+        .game-status {
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background: rgba(52, 73, 94, 0.05);
+            border: 1px solid rgba(52, 73, 94, 0.15);
+            color: #2c3e50;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-status.spinning {
+            background: rgba(52, 152, 219, 0.1);
+            border-color: rgba(52, 152, 219, 0.3);
+            color: #3498db;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .results {
+            grid-area: results;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+            padding: 8px;
+            overflow-y: auto;
+            box-shadow: 
+                inset 0 0 20px rgba(52, 73, 94, 0.05),
+                0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .results h2 {
+            font-size: 11px;
+            font-weight: 600;
+            color: #34495e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(52, 73, 94, 0.2);
+        }
+
+        .results ul {
+            list-style: none;
+        }
+
+        .results li {
+            background: rgba(52, 73, 94, 0.03);
+            border: 1px solid rgba(52, 73, 94, 0.15);
+            border-radius: 4px;
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            font-size: 10px;
+            font-weight: 500;
+            color: #2c3e50;
+            box-shadow: inset 0 1px 2px rgba(52, 73, 94, 0.05);
+        }
+
+        .results li.win {
+            border-left: 3px solid #27ae60;
+            background: rgba(39, 174, 96, 0.05);
+        }
+
+        .results li.loss {
+            border-left: 3px solid #e74c3c;
+            background: rgba(231, 76, 60, 0.05);
+        }
+
+        .controls {
+            display: flex;
+            gap: 6px;
+            margin: 8px 0;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px 14px;
+            background: linear-gradient(145deg, #3498db 0%, #2980b9 100%);
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            color: #ffffff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 2px 6px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            letter-spacing: 0.5px;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.3s ease;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        button:hover {
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        button:disabled:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .stats-container {
+            background: rgba(52, 73, 94, 0.03);
+            border: 1px solid rgba(52, 73, 94, 0.15);
+            border-radius: 4px;
+            padding: 10px;
+            margin-top: 8px;
+            box-shadow: inset 0 1px 2px rgba(52, 73, 94, 0.05);
+        }
+
+        .stats-container h3 {
+            font-size: 11px;
+            font-weight: 600;
+            color: #34495e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(52, 73, 94, 0.1);
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            margin: 4px 0;
+            color: #2c3e50;
+            padding: 2px 0;
+        }
+
+        .stat-item span {
+            color: #3498db;
+            font-weight: 600;
+        }
+
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(52, 73, 94, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(52, 73, 94, 0.4);
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(52, 73, 94, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>Modern Roulette Game</h1>
+        <div class="bankroll-header">
+            <div class="bankroll-item">
+                <label>Starting Bankroll:</label>
+                <input type="number" id="bankroll-header" min="1" value="1000">
+            </div>
+            <div class="current-bankroll">
+                Current Bankroll: $<span id="bankroll-amount-header">1000</span>
+            </div>
+        </div>
+    </div>
+    <div class="main-container">
+        <div class="betting-controls">
+            <div class="control-group">
+                <label>Select Chip Value:</label>
+                <div class="chip-selector">
+                    <div class="chip" data-value="1">$1</div>
+                    <div class="chip" data-value="5">$5</div>
+                    <div class="chip selected" data-value="10">$10</div>
+                    <div class="chip" data-value="25">$25</div>
+                    <div class="chip" data-value="50">$50</div>
+                    <div class="chip" data-value="100">$100</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <button id="spin-btn">Spin</button>
+                <button id="clear-bets-btn">Clear Bets</button>
+            </div>
+
+            <div class="controls">
+                <button id="reset-game-btn">Reset Game</button>
+            </div>
+
+            <div class="stats-container">
+                <h3>Game Statistics</h3>
+                <div class="stat-item">Total Spins: <span id="total-spins">0</span></div>
+                <div class="stat-item">Total Bet: <span id="total-bet">$0</span></div>
+                <div class="stat-item">Total Won: <span id="total-won">$0</span></div>
+                <div class="stat-item">Net P/L: <span id="net-pl">$0</span></div>
+                <div class="stat-item">Win Rate: <span id="win-rate">0%</span></div>
+            </div>
+        </div>
+
+        <div class="game-area">
+            <div class="winning-number" id="winning-number">-</div>
+            <div class="game-status" id="game-status">Place your bets and spin!</div>
+        </div>
+
+        <div class="results">
+            <h2>Recent Results</h2>
+            <ul id="results-list"></ul>
+        </div>
+
+        <div class="roulette-table-area">
+            <div class="roulette-table-container">
+                <!-- Start Simple - Just the Basic Numbers Like Google Sheets -->
+                <div class="image-based-grid">
+                    <!-- Zero spans all 3 rows -->
+                    <div class="bet-area zero-bet" data-bet-type="straight" data-numbers="0" title="Straight (35:1): 0">0</div>
+                    
+                    <!-- Row 1: Numbers 3,6,9,12,15,18,21,24,27,30,33,36 -->
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="3" title="Straight (35:1): 3">3</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="6" title="Straight (35:1): 6">6</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="9" title="Straight (35:1): 9">9</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="12" title="Straight (35:1): 12">12</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="15" title="Straight (35:1): 15">15</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="18" title="Straight (35:1): 18">18</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="21" title="Straight (35:1): 21">21</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="24" title="Straight (35:1): 24">24</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="27" title="Straight (35:1): 27">27</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="30" title="Straight (35:1): 30">30</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="33" title="Straight (35:1): 33">33</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="36" title="Straight (35:1): 36">36</div>
+                    <div class="bet-area column-bet purple" data-bet-type="column" data-numbers="3,6,9,12,15,18,21,24,27,30,33,36" title="Column (2:1)">2 to 1</div>
+                    
+                    <!-- Row 2: Numbers 2,5,8,11,14,17,20,23,26,29,32,35 -->
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="2" title="Straight (35:1): 2">2</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="5" title="Straight (35:1): 5">5</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="8" title="Straight (35:1): 8">8</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="11" title="Straight (35:1): 11">11</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="14" title="Straight (35:1): 14">14</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="17" title="Straight (35:1): 17">17</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="20" title="Straight (35:1): 20">20</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="23" title="Straight (35:1): 23">23</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="26" title="Straight (35:1): 26">26</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="29" title="Straight (35:1): 29">29</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="32" title="Straight (35:1): 32">32</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="35" title="Straight (35:1): 35">35</div>
+                    <div class="bet-area column-bet purple" data-bet-type="column" data-numbers="2,5,8,11,14,17,20,23,26,29,32,35" title="Column (2:1)">2 to 1</div>
+                    
+                    <!-- Row 3: Numbers 1,4,7,10,13,16,19,22,25,28,31,34 -->
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="1" title="Straight (35:1): 1">1</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="4" title="Straight (35:1): 4">4</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="7" title="Straight (35:1): 7">7</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="10" title="Straight (35:1): 10">10</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="13" title="Straight (35:1): 13">13</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="16" title="Straight (35:1): 16">16</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="19" title="Straight (35:1): 19">19</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="22" title="Straight (35:1): 22">22</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="25" title="Straight (35:1): 25">25</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="28" title="Straight (35:1): 28">28</div>
+                    <div class="bet-area number-bet black" data-bet-type="straight" data-numbers="31" title="Straight (35:1): 31">31</div>
+                    <div class="bet-area number-bet red" data-bet-type="straight" data-numbers="34" title="Straight (35:1): 34">34</div>
+                    <div class="bet-area column-bet purple" data-bet-type="column" data-numbers="1,4,7,10,13,16,19,22,25,28,31,34" title="Column (2:1)">2 to 1</div>
+                </div>
+                
+                <!-- Dozen Bets -->
+                <div class="dozen-section">
+                    <div class="bet-area dozen-bet" data-bet-type="dozen" data-numbers="1,2,3,4,5,6,7,8,9,10,11,12">1st 12</div>
+                    <div class="bet-area dozen-bet" data-bet-type="dozen" data-numbers="13,14,15,16,17,18,19,20,21,22,23,24">2nd 12</div>
+                    <div class="bet-area dozen-bet" data-bet-type="dozen" data-numbers="25,26,27,28,29,30,31,32,33,34,35,36">3rd 12</div>
+                </div>
+                
+                <!-- Outside Bets -->
+                <div class="outside-section">
+                    <div class="bet-area outside-bet" data-bet-type="low" data-numbers="1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18">1-18</div>
+                    <div class="bet-area outside-bet" data-bet-type="even" data-numbers="2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36">EVEN</div>
+                    <div class="bet-area outside-bet red-bet" data-bet-type="red" data-numbers="1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36">RED</div>
+                    <div class="bet-area outside-bet black-bet" data-bet-type="black" data-numbers="2,4,6,8,10,11,13,15,17,20,22,24,26,28,29,31,33,35">BLACK</div>
+                    <div class="bet-area outside-bet" data-bet-type="odd" data-numbers="1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35">ODD</div>
+                    <div class="bet-area outside-bet" data-bet-type="high" data-numbers="19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36">19-36</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
