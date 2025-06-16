@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Roulette</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { margin: 5px 0; padding: 5px; background: #f0f0f0; }
+        .error { background: #ffcccc; }
+        .success { background: #ccffcc; }
+    </style>
+</head>
+<body>
+    <h1>Roulette Debug Console</h1>
+    <div id="console"></div>
+    <br>
+    <button onclick="window.location.href='index.html'">Go to Game</button>
+    <button onclick="window.location.href='index-simple.html'">Go to Simple Version</button>
+    
+    <script>
+        function log(msg, type = 'log') {
+            const console = document.getElementById('console');
+            const div = document.createElement('div');
+            div.className = 'log ' + type;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            console.appendChild(div);
+        }
+        
+        log('Starting debug...');
+        
+        // Load and check game.js
+        const script = document.createElement('script');
+        script.src = 'game.js';
+        
+        script.onload = () => {
+            log('game.js loaded successfully', 'success');
+            
+            // Check if RouletteGame exists
+            if (typeof RouletteGame !== 'undefined') {
+                log('RouletteGame class found', 'success');
+                
+                try {
+                    // Try to create instance
+                    const testGame = new RouletteGame();
+                    log('Game instance created successfully', 'success');
+                    log('Initial bankroll: $' + testGame.bankroll);
+                    log('Selected chip value: $' + testGame.selectedChipValue);
+                    log('Active bets: ' + testGame.activeBets.size);
+                    
+                    // Check for required DOM elements
+                    const requiredElements = [
+                        'spin-btn',
+                        'clear-bets-btn', 
+                        'reset-game-btn',
+                        'bankroll-header',
+                        'bankroll-amount-header',
+                        'total-spins',
+                        'total-bet',
+                        'total-won',
+                        'net-pl',
+                        'win-rate',
+                        'winning-number',
+                        'game-status',
+                        'results-list'
+                    ];
+                    
+                    log('Checking for required DOM elements in index.html...');
+                    
+                    fetch('index.html')
+                        .then(r => r.text())
+                        .then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+                            
+                            let missing = [];
+                            requiredElements.forEach(id => {
+                                if (!doc.getElementById(id)) {
+                                    missing.push(id);
+                                }
+                            });
+                            
+                            if (missing.length > 0) {
+                                log('Missing elements: ' + missing.join(', '), 'error');
+                            } else {
+                                log('All required elements found', 'success');
+                            }
+                            
+                            // Check for betting areas
+                            const betAreas = doc.querySelectorAll('.bet-area');
+                            log('Found ' + betAreas.length + ' betting areas');
+                            
+                            const numberBets = doc.querySelectorAll('.number-bet');
+                            log('Found ' + numberBets.length + ' number betting areas');
+                            
+                            // Check chip selector
+                            const chips = doc.querySelectorAll('.chip');
+                            log('Found ' + chips.length + ' chip selectors');
+                        });
+                    
+                } catch (e) {
+                    log('Error creating game instance: ' + e.message, 'error');
+                    log('Stack trace: ' + e.stack, 'error');
+                }
+            } else {
+                log('RouletteGame class NOT found!', 'error');
+            }
+        };
+        
+        script.onerror = () => {
+            log('Failed to load game.js', 'error');
+        };
+        
+        document.head.appendChild(script);
+        
+        // Also check for console errors
+        window.addEventListener('error', (e) => {
+            log('JavaScript Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno, 'error');
+        });
+    </script>
+</body>
+</html>

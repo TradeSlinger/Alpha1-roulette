@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Corner Betting</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .log { margin: 5px 0; padding: 5px; background: #f0f0f0; }
+        .error { background: #ffcccc; }
+        .success { background: #ccffcc; }
+    </style>
+</head>
+<body>
+    <h1>Corner Betting Debug</h1>
+    <div id="console"></div>
+    
+    <script src="game.js"></script>
+    <script>
+        function log(msg, type = 'log') {
+            const console = document.getElementById('console');
+            const div = document.createElement('div');
+            div.className = 'log ' + type;
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            console.appendChild(div);
+        }
+        
+        log('Testing corner betting functionality...');
+        
+        // Test RouletteGame creation
+        try {
+            const game = new RouletteGame();
+            log('Game created successfully', 'success');
+            
+            // Test getNumberAtPosition function
+            log('Testing getNumberAtPosition function:');
+            
+            // Test some valid positions
+            const tests = [
+                {col: 0, row: 0, expected: 3},
+                {col: 1, row: 0, expected: 6}, 
+                {col: 0, row: 1, expected: 2},
+                {col: 1, row: 1, expected: 5},
+                {col: 11, row: 2, expected: 34},
+                {col: 12, row: 0, expected: null}, // out of bounds
+                {col: 0, row: 3, expected: null}   // out of bounds
+            ];
+            
+            tests.forEach(test => {
+                const result = game.getNumberAtPosition(test.col, test.row);
+                const status = result === test.expected ? 'success' : 'error';
+                log(`getNumberAtPosition(${test.col}, ${test.row}) = ${result} (expected: ${test.expected})`, status);
+            });
+            
+            // Test corner calculations
+            log('Testing corner calculations:');
+            
+            const cornerTests = [
+                {col: 0, row: 0, expected: [3, 6, 2, 5]}, // top-left corner
+                {col: 1, row: 0, expected: [6, 9, 5, 8]}, // second corner
+                {col: 10, row: 1, expected: [33, 36, 32, 35]} // bottom-right corner
+            ];
+            
+            cornerTests.forEach(test => {
+                const nums = [
+                    game.getNumberAtPosition(test.col, test.row),
+                    game.getNumberAtPosition(test.col + 1, test.row),
+                    game.getNumberAtPosition(test.col, test.row + 1),
+                    game.getNumberAtPosition(test.col + 1, test.row + 1)
+                ].filter(n => n);
+                
+                const matches = JSON.stringify(nums.sort()) === JSON.stringify(test.expected.sort());
+                const status = matches ? 'success' : 'error';
+                log(`Corner at (${test.col}, ${test.row}): ${nums.join('/')} (expected: ${test.expected.join('/')})`, status);
+            });
+            
+            // Test split area creation
+            log('Testing createSplitArea function for corner:');
+            
+            const mockArea = game.createSplitArea('corner', 0, 0, 50, 50);
+            if (mockArea) {
+                const numbers = mockArea.getAttribute('data-numbers');
+                const betType = mockArea.getAttribute('data-bet-type');
+                log(`Created corner area: type=${betType}, numbers=${numbers}`, 'success');
+            } else {
+                log('Failed to create corner area', 'error');
+            }
+            
+        } catch (e) {
+            log('Error: ' + e.message, 'error');
+            console.error(e);
+        }
+        
+        log('Debug complete!');
+    </script>
+</body>
+</html>
