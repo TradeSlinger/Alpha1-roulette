@@ -8,6 +8,7 @@ class RouletteGame {
         this.results = [];
         this.selectedChipValue = 10;
         this.lastWinningNumber = null;
+        this.lastRoundBets = []; // Snapshot of the previous round's bets for "Rebet"
         this.stats = {
             totalSpins: 0,
             totalBet: 0,
@@ -33,6 +34,7 @@ class RouletteGame {
     setupEventListeners() {
         // Game controls
         document.getElementById('spin-btn').addEventListener('click', () => this.spin());
+        document.getElementById('rebet-btn').addEventListener('click', () => this.rebet());
         document.getElementById('clear-bets-btn').addEventListener('click', () => this.clearBets());
         document.getElementById('reset-game-btn').addEventListener('click', () => this.resetGame());
         
@@ -364,16 +366,18 @@ class RouletteGame {
     }
 
     placeBet(element, betType, numbers) {
-        const betAmount = this.selectedChipValue;
-        
+        this.placeBetAmount(element, betType, numbers, this.selectedChipValue);
+    }
+
+    placeBetAmount(element, betType, numbers, betAmount) {
         if (betAmount > this.bankroll) {
             this.showMessage('Insufficient bankroll!', 'error');
-            return;
+            return false;
         }
-        
+
         // Create unique bet ID
         const betId = `${betType}-${numbers.join(',')}`;
-        
+
         if (this.activeBets.has(betId)) {
             // Add to existing bet (stack chips)
             this.stackChip(betId, element, betAmount);
@@ -381,9 +385,33 @@ class RouletteGame {
             // Add new bet
             this.addBet(betId, element, betType, numbers, betAmount);
         }
-        
+
         this.updateUI();
         this.updateGameStatus();
+        return true;
+    }
+
+    rebet() {
+        if (this.isSpinning) return;
+
+        if (!this.lastRoundBets || this.lastRoundBets.length === 0) {
+            this.showMessage('No previous bets to repeat', 'info');
+            return;
+        }
+
+        const total = this.lastRoundBets.reduce((sum, bet) => sum + bet.amount, 0);
+        if (total > this.bankroll) {
+            this.showMessage('Insufficient bankroll to repeat bets!', 'error');
+            return;
+        }
+
+        this.lastRoundBets.forEach(bet => {
+            const selector = `[data-bet-type="${bet.type}"][data-numbers="${bet.numbers.join(',')}"]`;
+            const element = document.querySelector(selector);
+            if (element) {
+                this.placeBetAmount(element, bet.type, bet.numbers, bet.amount);
+            }
+        });
     }
 
     stackChip(betId, element, amount) {
@@ -525,7 +553,14 @@ class RouletteGame {
         
         // Add to results
         this.addResult(winningNumber, color, results);
-        
+
+        // Snapshot this round's bets so the player can repeat them ("Rebet")
+        this.lastRoundBets = Array.from(this.activeBets.values()).map(bet => ({
+            type: bet.type,
+            numbers: bet.numbers.slice(),
+            amount: bet.amount
+        }));
+
         // Reset game state
         this.clearAllBets();
         this.isSpinning = false;
@@ -751,6 +786,7 @@ class RouletteGame {
     resetGame() {
         this.bankroll = this.initialBankroll;
         this.results = [];
+        this.lastRoundBets = [];
         this.stats = {
             totalSpins: 0,
             totalBet: 0,
@@ -788,6 +824,13 @@ class RouletteGame {
         
         // Enable/disable spin button
         document.getElementById('spin-btn').disabled = !this.canSpin();
+
+        // Enable/disable rebet button
+        const rebetBtn = document.getElementById('rebet-btn');
+        if (rebetBtn) {
+            const hasLastBets = this.lastRoundBets && this.lastRoundBets.length > 0;
+            rebetBtn.disabled = this.isSpinning || !hasLastBets;
+        }
     }
 }
 
